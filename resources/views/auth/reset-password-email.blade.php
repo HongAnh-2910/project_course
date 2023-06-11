@@ -8,7 +8,7 @@
     <title>Document</title>
 </head>
 <body>
-       <form action="{{ route('auth.change-reset-password' ,$remember_token) }}">
+       <form action="{{ route('auth.change-reset-password' ,$token) }}">
            <button>Lấy lại mật khẩu</button>
        </form>
 </body>

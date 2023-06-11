@@ -23,11 +23,13 @@ class SendMailResetPassword implements ShouldQueue
 
     public $tries = 3;
 
-    protected $user;
+    protected $email;
+    protected $token;
 
-    public function __construct($user)
+    public function __construct($email , $token)
     {
-        $this->user = $user;
+        $this->email = $email;
+        $this->token = $token;
     }
 
     /**
@@ -37,6 +39,6 @@ class SendMailResetPassword implements ShouldQueue
      */
     public function handle()
     {
-        Mail::to($this->user->email)->send(new ResetPassword($this->user->remember_token));
+        Mail::to($this->email)->send(new ResetPassword($this->token));
     }
 }

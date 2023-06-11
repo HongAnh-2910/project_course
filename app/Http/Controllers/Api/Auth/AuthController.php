@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Auth\ChangePasswordRequest;
-use App\Http\Requests\Api\Auth\LoginRequest;
-use App\Http\Requests\Api\Auth\ResetPasswordRequest;
-use App\Jobs\Api\Auth\SendMailResetPassword;
-use App\Mail\Api\Auth\ResetPassword;
-use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\PasswordReset;
+use Illuminate\Http\Response;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Config;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Jobs\Api\Auth\SendMailResetPassword;
+use App\Http\Requests\Api\Auth\ResetPasswordRequest;
+use App\Http\Requests\Api\Auth\ChangePasswordRequest;
+use App\Http\Requests\Api\Auth\ChangeResetPasswordRequest;
 
 class AuthController extends Controller
 {
@@ -64,32 +64,51 @@ class AuthController extends Controller
     public function resetPassword(ResetPasswordRequest $request)
     {
         $email = $request->input('email');
-        $user = User::where('email' , $email);
-        if ($user->count() <= 0)
+        $queryPasswordReset = PasswordReset::Email($email);
+        $user = User::Email($email)->count();
+        if ($user <= 0)
         {
             return $this->errorResponse(__('auth.reset_password_check_email') ,Response::HTTP_BAD_REQUEST);
         }
-
-        $user = $user->first();
-        $user->remember_token = csrf_token();
-        $user->save();
-        SendMailResetPassword::dispatch($user)->delay(now()->addSeconds(10));
+        if($queryPasswordReset->count() > 0)
+        {
+            $queryPasswordReset->delete();
+        }
+        $passwordReset = PasswordReset::create([
+            'email' => $email,
+            'token' => Str::random(40),
+            'created_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
+        SendMailResetPassword::dispatch($passwordReset->email , $passwordReset->token)->delay(now()->addSeconds(10));
         return $this->successResponse(null ,__('auth.reset_password_send_email'));
     }
 
     public function changeResetPassword(Request $request , $token)
     {
-        $user = User::where('remember_token' , $token)->count();
-        if ($user <= 0)
+        $query = PasswordReset::Token($token);
+        $user =  $query->first();
+        $expire = Carbon::parse($user->created_at)->addMinutes(1);
+        if(Carbon::now()->greaterThanOrEqualTo($expire))
+        {
+            $query->delete();
+        }
+        if ($user->count() <= 0)
         {
             abort(404);
         }
         return view('auth.reset-password' , compact('token'));
     }
 
-    public function changePasswordForget(Request $request)
+    public function changePasswordForget(ChangeResetPasswordRequest $request)
     {
-        return $request->all();
+        $getPasswordAndToken = $request->only(['token' ,'password']);
+        $query = PasswordReset::where('token' , data_get($getPasswordAndToken ,'token'));
+        $passwordReset = $query->first();
+        $user = User::Email($passwordReset->email)->first();
+        $user->password = Hash::make(data_get($getPasswordAndToken ,'password'));
+        $user->save();
+        $query->delete();
+        return __('auth.reset_password_success');
     }
 
     /**

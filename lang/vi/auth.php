@@ -8,5 +8,6 @@
         'message_password_check'     => 'Mật khẩu không khớp',
         'success_change_password'    => 'Đổi mật khẩu thành công',
         'reset_password_check_email' => 'Tài khoản này chưa được đăng ký trong hệ thống',
-        'reset_password_send_email'  => 'Vui lòng kiểm tra lại email để lấy mật khẩu'
+        'reset_password_send_email'  => 'Vui lòng kiểm tra email để lấy mật khẩu',
+        'reset_password_success'     => 'Lấy lại mật khẩu thành công !'
     ];

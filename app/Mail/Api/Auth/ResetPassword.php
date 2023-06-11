@@ -19,11 +19,11 @@ class ResetPassword extends Mailable
      * @return void
      */
 
-    protected $rememberToken;
+    protected $token;
 
-    public function __construct($rememberToken)
+    public function __construct($token)
     {
-        $this->rememberToken = $rememberToken;
+        $this->token = $token;
     }
 
     /**
@@ -48,7 +48,7 @@ class ResetPassword extends Mailable
         return new Content(
             view: 'auth.reset-password-email',
             with: [
-                'remember_token' => $this->rememberToken
+                'token' => $this->token
             ]
         );
     }

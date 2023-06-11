@@ -10,11 +10,18 @@
 </head>
 <body>
 <form action="{{route('auth.change-password-forget')}}" method="post">
-    <input type="hidden" name="_token" value="{{ $token }}">
+    @csrf
     <label>Mật khẩu mới</label><br>
+    <input type="hidden" name="token" value="{{ $token }}">
+    @error('password')
+        {{ $message }}
+    @enderror
     <input type="password" name="password">
     <label>Nhập lại mật khẩu mới</label><br>
-    <input type="password" name="password_confirm">
+    @error('password_confirmation')
+    {{ $message }}
+   @enderror
+    <input type="password" name="password_confirmation">
     <button type="submit">Xác nhận</button>
 </form>
 </body>

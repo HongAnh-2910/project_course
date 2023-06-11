@@ -15,16 +15,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('/auth')->group(function(){
+Route::prefix('/auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::post('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
     Route::post('refresh-token', [AuthController::class, 'refreshToken']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
-    Route::get('change-reset-password/{token}', [AuthController::class, 'changeResetPassword'])->name('auth.change-reset-password');
-    Route::post('change-password-forget', [AuthController::class, 'changePasswordForget'])->name('auth.change-password-forget');
-});
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
 });
